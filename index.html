@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>语法打怪</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+body { 
+  font-family: -apple-system, sans-serif; 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  min-height: 100vh; 
+  padding: 10px;
+}
+.container { 
+  max-width: 400px; 
+  margin: 0 auto; 
+  background: white; 
+  border-radius: 20px; 
+  overflow: hidden;
+}
+.header { 
+  background: linear-gradient(90deg, #f093fb, #f5576c); 
+  color: white; 
+  padding: 15px; 
+  text-align: center;
+}
+.header h1 { font-size: 20px; }
+.stats { display: flex; justify-content: space-around; margin-top: 10px; font-size: 16px; }
+
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
+
+button, .btn { 
+  display: block; 
+  width: 100%; 
+  padding: 15px; 
+  margin: 10px 0; 
+  border: none; 
+  border-radius: 10px; 
+  font-size: 18px; 
+  font-weight: bold; 
+  cursor: pointer;
+  background: #667eea;
+  color: white;
+  -webkit-appearance: none;
+}
+button:active { opacity: 0.8; }
+.btn-green { background: #00b894; }
+.btn-red { background: #e74c3c; }
+
+.center { text-align: center; padding: 30px 0; }
+.emoji-big { font-size: 80px; }
+
+.battle { 
+  background: linear-gradient(180deg, #1a1a2e, #16213e); 
+  color: white; 
+  padding: 20px; 
+  border-radius: 15px; 
+  text-align: center;
+  margin: 15px 0;
+}
+.monster { font-size: 80px; }
+.hp-bar { background: #333; height: 20px; border-radius: 10px; margin: 10px 0; }
+.hp-fill { background: #e74c3c; height: 100%; border-radius: 10px; transition: width 0.3s; }
+
+.question { 
+  background: #f8f9fa; 
+  padding: 20px; 
+  border-radius: 15px; 
+  margin: 15px 0;
+}
+.q-text { font-size: 18px; font-weight: bold; margin-bottom: 15px; text-align: center; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opt { 
+  padding: 15px; 
+  border: 2px solid #667eea; 
+  background: white; 
+  border-radius: 10px; 
+  font-size: 16px;
+  cursor: pointer;
+}
+.opt.correct { background: #00b894; border-color: #00b894; color: white; }
+.opt.wrong { background: #e74c3c; border-color: #e74c3c; color: white; }
+
+.items { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+.item { 
+  width: 60px; height: 60px; 
+  border: 2px solid #ddd; 
+  background: white; 
+  border-radius: 10px; 
+  font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+.item-count { 
+  position: absolute; bottom: -5px; right: -5px; 
+  background: #e74c3c; color: white; 
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+.lvl { 
+  aspect-ratio: 1; 
+  border: 2px solid #667eea; 
+  background: white; 
+  border-radius: 15px; 
+  font-size: 30px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.lvl span { font-size: 12px; margin-top: 5px; }
+
+.shop-item { 
+  display: flex; align-items: center; 
+  background: #f8f9fa; padding: 15px; border-radius: 10px; 
+  margin: 10px 0; cursor: pointer;
+}
+.shop-item .icon { font-size: 40px; margin-right: 15px; }
+.shop-item .info { flex: 1; }
+.shop-item .price { color: #f39c12; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🦖 语法打怪大冒险</h1>
+    <div class="stats">
+      <span>❤️ <b id="lives">3</b></span>
+      <span>🪙 <b id="coins">0</b></span>
+      <span>👾 <b id="defeated">0</b></span>
+    </div>
+  </div>
+
+  <!-- 菜单 -->
+  <div id="p-menu" class="page active">
+    <div class="center">
+      <div class="emoji-big">🦖⚔️</div>
+      <h2>现在进行时练习</h2>
+      <p style="color:#666;margin:15px 0;">答对题目攻击怪兽！</p>
+    </div>
+    <button onclick="go('levels')">开始游戏 🎮</button>
+    <button class="btn-green" onclick="go('shop')">道具商店 🛒</button>
+  </div>
+
+  <!-- 关卡 -->
+  <div id="p-levels" class="page">
+    <h3 style="text-align:center;margin-bottom:15px;">选择关卡</h3>
+    <div class="levels" id="levels"></div>
+    <button class="btn-red" onclick="go('menu')">返回</button>
+  </div>
+
+  <!-- 游戏 -->
+  <div id="p-game" class="page">
+    <div class="battle">
+      <div style="font-size:14px;margin-bottom:5px;">连击: <b id="combo">0</b></div>
+      <div class="monster" id="m-emoji">👾</div>
+      <div id="m-name">小怪物</div>
+      <div class="hp-bar"><div class="hp-fill" id="hp" style="width:100%"></div></div>
+    </div>
+    <div class="items">
+      <div class="item" onclick="use('hint')">💡<span class="item-count" id="n-hint">2</span></div>
+      <div class="item" onclick="use('heal')">❤️<span class="item-count" id="n-heal">1</span></div>
+      <div class="item" onclick="use('shield')">🛡️<span class="item-count" id="n-shield">0</span></div>
+    </div>
+    <div class="question">
+      <div class="q-text" id="q-text">加载中...</div>
+      <div class="options" id="opts"></div>
+      <div style="text-align:center;margin-top:10px;color:#e74c3c;font-weight:bold;" id="fb"></div>
+    </div>
+    <button class="btn-red" onclick="go('levels')">放弃</button>
+  </div>
+
+  <!-- 商店 -->
+  <div id="p-shop" class="page">
+    <h3 style="text-align:center;margin-bottom:15px;">🛒 道具商店</h3>
+    <div class="shop-item" onclick="buy('hint')">
+      <div class="icon">💡</div>
+      <div class="info"><div><b>提示卡</b></div><div>显示答案</div></div>
+      <div class="price">🪙 30</div>
+    </div>
+    <div class="shop-item" onclick="buy('heal')">
+      <div class="icon">❤️</div>
+      <div class="info"><div><b>生命药水</b></div><div>恢复生命</div></div>
+      <div class="price">🪙 50</div>
+    </div>
+    <div class="shop-item" onclick="buy('shield')">
+      <div class="icon">🛡️</div>
+      <div class="info"><div><b>护盾</b></div><div>抵挡错误</div></div>
+      <div class="price">🪙 80</div>
+    </div>
+    <button class="btn-red" onclick="go('menu')">返回</button>
+  </div>
+
+  <!-- 胜利 -->
+  <div id="p-win" class="page">
+    <div class="center">
+      <div class="emoji-big">🎉</div>
+      <h2>击败怪兽！</h2>
+      <button onclick="next()" style="margin-top:20px;">下一关 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 数据
+const monsters = ['👾','🐉','🦖','🐊','🦑','🦂','🐺','🦇','👹','👿'];
+const names = ['小怪物','幼龙','霸王龙','鳄鱼王','深海巨妖','毒蝎','狼人','吸血鬼','恶魔','魔王'];
+const hps = [6,6,8,8,8,8,10,10,10,12];
+
+const qs = [
+  [['I ___ a book now.',['am reading','is reading','are reading'],0,'I后面用am'],['She ___ in the room.',['is dancing','are dancing','am dancing'],0,'She用is'],['They ___ football.',['is playing','are playing','am playing'],1,'They用are'],['We ___ TV.',['is watching','are watching','am watching'],1,'We用are'],['He ___ fast.',['is running','are running','am running'],0,'He用is'],['The cat ___.',['is sleeping','are sleeping','am sleeping'],0,'单数用is'],['You ___ a song.',['is singing','are singing','am singing'],1,'You用are'],['The birds ___.',['is flying','are flying','am flying'],1,'复数用are']],
+  [['My mother ___ dinner.',['is cooking','are cooking','am cooking'],0],['The students ___ homework.',['is writing','are writing','am writing'],1],['Tom and Jerry ___.',['is fighting','are fighting','am fighting'],1],['My dog ___ loudly.',['is barking','are barking','am barking'],0],['The teachers ___.',['is talking','are talking','am talking'],1],['Mary ___ a picture.',['is drawing','are drawing','am drawing'],0],['The children ___.',['is laughing','are laughing','am laughing'],1],['My father ___.',['is working','are working','am working'],0]],
+  [['Listen! The baby ___.',['is crying','are crying','am crying'],0],['Look! The girls ___.',['is dancing','are dancing','am dancing'],1],['Be quiet! I ___.',['is thinking','are thinking','am thinking'],2],['Hurry up! We ___.',['is waiting','are waiting','am waiting'],1],['The teacher ___.',['is speaking','are speaking','am speaking'],0],['The dog ___.',['is swimming','are swimming','am swimming'],0],['They ___ the tree.',['is climbing','are climbing','am climbing'],1],['A car ___.',['is coming','are coming','am coming'],0]],
+  [['___ you ___ English?',['Are/studying','Is/studying','Am/studying'],0],['___ he ___?',['Are/sleeping','Is/sleeping','Am/sleeping'],1],['What ___ you ___?',['are/doing','is/doing','am/doing'],0],['Where ___ they ___?',['is/going','are/going','am/going'],1],['Why ___ she ___?',['are/crying','is/crying','am/crying'],1],['___ it ___?',['Are/raining','Is/raining','Am/raining'],1],['Who ___?',['is knocking','are knocking','am knocking'],0],['What ___ Tom ___?',['are/eating','is/eating','am/eating'],1]],
+  [['I ___ TV.',['am not watching',"isn't watching","aren't watching"],0],['He ___ games.',['am not playing',"isn't playing","aren't playing"],1],['They ___ now.',['am not studying',"isn't studying","aren't studying"],2],['She ___.',['am not singing',"isn't singing","aren't singing"],1],['We ___.',['am not swimming',"isn't swimming","aren't swimming"],2],['The bird ___.',['am not flying',"isn't flying","aren't flying"],1],['You ___.',['am not listening',"isn't listening","aren't listening"],2],['It ___.',['am not working',"isn't working","aren't working"],1]],
+  [['___ they ___ lunch?',['Are/having','Is/having','Am/having'],0],['The sun ___.',['is shining','are shining','am shining'],0],['The children ___ noise.',['is making','are making','am making'],1],['___ you ___ OK?',['Are/feeling','Is/feeling','Am/feeling'],0],['My grandma ___ a story.',['is telling','are telling','am telling'],0],['The boys ___ bikes.',['is riding','are riding','am riding'],1],['Someone ___ the bell.',['is ringing','are ringing','am ringing'],0],['The wind ___.',['is blowing','are blowing','am blowing'],0]],
+  [['The baby ___.',['is sleeping','are sleeping','am sleeping'],0],['The train ___.',['is arriving','are arriving','am arriving'],0],['It ___.',['is raining','are raining','am raining'],0],['You ___ time.',['is wasting','are wasting','am wasting'],1],['I ___ you something.',['is showing','are showing','am showing'],2],['The plane ___.',['is landing','are landing','am landing'],0],['The bus ___.',['is leaving','are leaving','am leaving'],0],['Someone ___ piano.',['is playing','are playing','am playing'],0]],
+  [['Why ___ you ___?',['are/laughing','is/laughing','am/laughing'],0],['The dog ___ at stranger.',['is barking','are barking','am barking'],0],['___ students ___ notes?',['Are/taking','Is/taking','Am/taking'],0],['I ___ for my pen.',['am looking','is looking','are looking'],0],['She ___ meat.',['am not eating',"isn't eating","aren't eating"],1],['The fish ___.',['is swimming','are swimming','am swimming'],0],['We ___ good time.',['is having','are having','am having'],1],['___ you ___ for me?',['Are/waiting','Is/waiting','Am/waiting'],0]]
+];
+
+let g = {lv:1,qi:0,lives:3,coins:0,beat:0,combo:0,items:{hint:2,heal:1,shield:0},shield:false,mhp:0,hp:0,qs:[]};
+
+function save() { try { localStorage.setItem('gg', JSON.stringify(g)); } catch(e) {} }
+function load() { try { let d = localStorage.getItem('gg'); if(d) g = JSON.parse(d); } catch(e) {} upd(); }
+function upd() {
+  document.getElementById('lives').textContent = g.lives;
+  document.getElementById('coins').textContent = g.coins;
+  document.getElementById('defeated').textContent = g.beat;
+  document.getElementById('n-hint').textContent = g.items.hint;
+  document.getElementById('n-heal').textContent = g.items.heal;
+  document.getElementById('n-shield').textContent = g.items.shield;
+}
+function go(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.getElementById('p-'+p).classList.add('active');
+  if(p=='levels') renderLvls();
+}
+function renderLvls() {
+  let h = '';
+  for(let i=1;i<=10;i++) {
+    let o = i<=g.beat+1 ? 1 : 0.3;
+    h += '<div class="lvl" style="opacity:'+o+'" onclick="if('+i+'<='+g.beat+'+1)start('+i+')">'+monsters[i-1]+'<span>Lv.'+i+'</span></div>';
+  }
+  document.getElementById('levels').innerHTML = h;
+}
+function start(lv) {
+  g.lv = lv; g.qi = 0; g.combo = 0; g.shield = false;
+  g.mhp = hps[lv-1]; g.hp = g.mhp;
+  g.qs = [...qs[Math.min(lv-1,7)]].sort(()=>Math.random()-0.5);
+  go('game');
+  document.getElementById('m-emoji').textContent = monsters[lv-1];
+  document.getElementById('m-name').textContent = names[lv-1];
+  updateHp(); upd(); showQ();
+}
+function updateHp() { document.getElementById('hp').style.width = (g.hp/g.mhp*100)+'%'; }
+function showQ() {
+  let q = g.qs[g.qi];
+  document.getElementById('q-text').textContent = q[0];
+  document.getElementById('fb').textContent = '';
+  let h = '';
+  q[1].forEach((opt,i) => { h += '<div class="opt" onclick="ans('+i+',this)">'+opt+'</div>'; });
+  document.getElementById('opts').innerHTML = h;
+  window.answering = true;
+}
+function ans(idx,el) {
+  if(!window.answering) return;
+  window.answering = false;
+  let q = g.qs[g.qi];
+  let fb = document.getElementById('fb');
+  if(idx == q[2]) {
+    el.classList.add('correct');
+    g.combo++;
+    let crit = g.combo >= 3;
+    let dmg = crit ? 2 : 1;
+    g.hp -= dmg;
+    g.coins += crit ? 10 : 5;
+    fb.textContent = crit ? '💥暴击!-'+dmg+'HP' : '⚔️攻击!-'+dmg+'HP';
+    fb.style.color = '#00b894';
+    if(crit) g.combo = 0;
+    updateHp(); upd();
+    if(g.hp <= 0) { setTimeout(()=>{g.beat++;save();go('win')},800); return; }
+  } else {
+    el.classList.add('wrong');
+    if(g.shield) { g.shield = false; fb.textContent = '🛡️护盾保护!'; fb.style.color = '#3498db'; }
+    else { g.lives--; g.combo = 0; fb.textContent = '💡'+(q[3]||'再想想'); fb.style.color = '#e74c3c'; if(g.lives<=0){alert('游戏结束!');go('menu');return;} }
+    upd();
+  }
+  document.getElementById('combo').textContent = g.combo;
+  setTimeout(()=>{g.qi++; showQ();}, 1000);
+}
+function use(t) {
+  if(g.items[t] <= 0) return;
+  if(t=='hint') { g.items.hint--; let q=g.qs[g.qi]; document.getElementById('fb').textContent='💡'+(q[3]||'选第'+(q[2]+1)+'个'); document.getElementById('fb').style.color='#3498db'; }
+  else if(t=='heal') { if(g.lives>=3)return alert('生命已满!'); g.items.heal--; g.lives++; }
+  else if(t=='shield') { if(g.shield)return; g.items.shield--; g.shield=true; alert('🛡️护盾激活!'); }
+  save(); upd();
+}
+function buy(t) {
+  let p = {hint:30,heal:50,shield:80};
+  if(g.coins < p[t]) return alert('金币不足!');
+  g.coins -= p[t]; g.items[t]++;
+  save(); upd();
+  alert('购买成功!');
+}
+function next() { renderLvls(); go('levels'); }
+
+load();
+</script>
+</body>
+</html>
